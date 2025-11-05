@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Company Dashboard - Career Guidance System</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/" class="nav-brand">Career Guidance System</a>
+            <div class="nav-links">
+                <a href="#" class="btn btn-secondary" onclick="manageJobs()">Job Postings</a>
+                <a href="#" class="btn btn-secondary" onclick="viewApplications()">Applications</a>
+                <a href="#" class="btn btn-secondary" onclick="showProfile()">Company Profile</a>
+                <button class="btn btn-danger" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        <div class="grid grid-3">
+            <!-- Job Postings Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Job Postings</h3>
+                </div>
+                <div id="jobStats">
+                    <p>Active Jobs: <span id="activeJobs">0</span></p>
+                    <p>Total Applications: <span id="totalApplications">0</span></p>
+                    <p>Pending Review: <span id="pendingReviews">0</span></p>
+                    <button class="btn btn-primary" onclick="postNewJob()">Post New Job</button>
+                </div>
+            </div>
+
+            <!-- Application Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Application Statistics</h3>
+                </div>
+                <div id="applicationStats">
+                    <p>This Week: <span id="weeklyApplications">0</span></p>
+                    <p>This Month: <span id="monthlyApplications">0</span></p>
+                    <p>Total Hired: <span id="totalHired">0</span></p>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Quick Actions</h3>
+                </div>
+                <div class="grid grid-2">
+                    <button class="btn btn-primary mb-2" onclick="reviewApplications()">Review Applications</button>
+                    <button class="btn btn-primary mb-2" onclick="scheduleInterviews()">Schedule Interviews</button>
+                    <button class="btn btn-primary mb-2" onclick="updateJobRequirements()">Update Requirements</button>
+                    <button class="btn btn-primary mb-2" onclick="viewAnalytics()">View Analytics</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Job Applications -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title">Recent Applications</h3>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Applicant</th>
+                        <th>Position</th>
+                        <th>Applied Date</th>
+                        <th>Experience</th>
+                        <th>Match Score</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="recentApplications">
+                    <!-- Applications will be populated here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Active Job Postings -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title">Active Job Postings</h3>
+            </div>
+            <div class="grid grid-3" id="activeJobPostings">
+                <!-- Active jobs will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Post Job Modal -->
+    <div id="jobModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Post New Job</h3>
+                <button class="modal-close" onclick="closeModal('jobModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="jobForm">
+                    <div class="form-group">
+                        <label for="jobTitle">Job Title:</label>
+                        <input type="text" id="jobTitle" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="department">Department:</label>
+                        <input type="text" id="department" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Job Description:</label>
+                        <textarea id="description" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="requirements">Requirements:</label>
+                        <div id="requirementsList">
+                            <div class="requirement-item">
+                                <input type="text" class="form-control mb-2" placeholder="Requirement">
+                                <button type="button" class="btn btn-secondary" onclick="addRequirement()">Add More</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="minGPA">Minimum GPA:</label>
+                        <input type="number" id="minGPA" class="form-control" step="0.1" min="0" max="4">
+                    </div>
+                    <div class="form-group">
+                        <label for="experience">Required Experience (Years):</label>
+                        <input type="number" id="experience" class="form-control" min="0">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('jobModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveJob()">Post Job</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Company Profile Modal -->
+    <div id="profileModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Company Profile</h3>
+                <button class="modal-close" onclick="closeModal('profileModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label for="companyName">Company Name:</label>
+                        <input type="text" id="companyName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="industry">Industry:</label>
+                        <input type="text" id="industry" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="about">About Company:</label>
+                        <textarea id="about" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="website">Website:</label>
+                        <input type="url" id="website" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact">Contact Email:</label>
+                        <input type="email" id="contact" class="form-control" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('profileModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth } from './firebase-app.js';
+        import { signOut } from 'https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js';
+        import config from './config.js';
+
+        // Initialize the dashboard
+        async function initializeDashboard() {
+            const user = auth.currentUser;
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            await loadJobStats();
+            await loadApplicationStats();
+            await loadRecentApplications();
+            await loadActiveJobs();
+        }
+
+        // Load job statistics
+        async function loadJobStats() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${config.apiUrl}/api/company/jobs/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('activeJobs').textContent = data.data.active;
+                    document.getElementById('totalApplications').textContent = data.data.applications;
+                    document.getElementById('pendingReviews').textContent = data.data.pending;
+                }
+            } catch (error) {
+                console.error('Error loading job stats:', error);
+            }
+        }
+
+        // Load application statistics
+        async function loadApplicationStats() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${config.apiUrl}/api/company/applications/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('weeklyApplications').textContent = data.data.weekly;
+                    document.getElementById('monthlyApplications').textContent = data.data.monthly;
+                    document.getElementById('totalHired').textContent = data.data.hired;
+                }
+            } catch (error) {
+                console.error('Error loading application stats:', error);
+            }
+        }
+
+        // Load recent applications
+        async function loadRecentApplications() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${config.apiUrl}/api/company/applications/recent`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const tbody = document.getElementById('recentApplications');
+                    tbody.innerHTML = data.data.map(app => `
+                        <tr>
+                            <td>${app.applicantName}</td>
+                            <td>${app.position}</td>
+                            <td>${new Date(app.appliedDate).toLocaleDateString()}</td>
+                            <td>${app.experience} years</td>
+                            <td>${app.matchScore}%</td>
+                            <td><span class="badge badge-${getStatusBadge(app.status)}">${app.status}</span></td>
+                            <td>
+                                <button class="btn btn-secondary" onclick="reviewApplication('${app.id}')">Review</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading recent applications:', error);
+            }
+        }
+
+        // Load active jobs
+        async function loadActiveJobs() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${config.apiUrl}/api/company/jobs/active`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const container = document.getElementById('activeJobPostings');
+                    container.innerHTML = data.data.map(job => `
+                        <div class="card">
+                            <h4>${job.title}</h4>
+                            <p>Department: ${job.department}</p>
+                            <p>Applications: ${job.applications}</p>
+                            <button class="btn btn-secondary" onclick="viewJob('${job.id}')">View Details</button>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading active jobs:', error);
+            }
+        }
+
+        // Utility function for status badge colors
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'hired': return 'success';
+                case 'pending': return 'warning';
+                case 'rejected': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        // Make functions globally available
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+                localStorage.removeItem('token');
+                localStorage.removeItem('role');
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Error signing out:', error);
+                alert('Error signing out');
+            }
+        };
+
+        window.manageJobs = function() {
+            window.location.href = 'manage-jobs.html';
+        };
+
+        window.viewApplications = function() {
+            window.location.href = 'view-applications.html';
+        };
+
+        window.showProfile = function() {
+            document.getElementById('profileModal').style.display = 'flex';
+        };
+
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        };
+
+        window.postNewJob = function() {
+            document.getElementById('jobModal').style.display = 'flex';
+        };
+
+        // Initialize dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+</body>
+</html>

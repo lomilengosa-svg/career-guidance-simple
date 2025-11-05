@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Courses - Institution Dashboard</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/institution-dashboard.html" class="nav-brand">Career Guidance System</a>
+            <div class="nav-links">
+                <a href="manage-courses.html" class="btn btn-primary">Courses</a>
+                <a href="review-applications.html" class="btn btn-secondary">Applications</a>
+                <a href="track-admissions.html" class="btn btn-secondary">Admissions</a>
+                <a href="student-connections.html" class="btn btn-secondary">Students</a>
+                <button class="btn btn-danger" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        <div class="page-header">
+            <h2>Manage Courses</h2>
+            <button class="btn btn-primary" onclick="showAddCourseModal()">
+                <i class="fas fa-plus"></i> Add New Course
+            </button>
+        </div>
+
+        <div class="filters-section">
+            <div class="form-group">
+                <input type="text" id="searchCourse" class="form-control" placeholder="Search courses...">
+            </div>
+            <div class="form-group">
+                <select id="facultyFilter" class="form-control">
+                    <option value="">All Faculties</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <select id="statusFilter" class="form-control">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="courses-grid" id="coursesGrid">
+            <!-- Courses will be populated here -->
+        </div>
+    </div>
+
+    <!-- Add/Edit Course Modal -->
+    <div id="courseModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Course</h3>
+                <button class="modal-close" onclick="closeModal('courseModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="courseForm">
+                    <div class="form-group">
+                        <label for="courseName">Course Name*</label>
+                        <input type="text" id="courseName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="faculty">Faculty*</label>
+                        <select id="faculty" class="form-control" required>
+                            <!-- Faculties will be populated here -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="courseCode">Course Code*</label>
+                        <input type="text" id="courseCode" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="duration">Duration (Years)*</label>
+                        <input type="number" id="duration" class="form-control" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="totalSeats">Total Seats*</label>
+                        <input type="number" id="totalSeats" class="form-control" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description*</label>
+                        <textarea id="description" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Requirements</label>
+                        <div id="requirementsList">
+                            <div class="requirement-item">
+                                <input type="text" class="form-control mb-2" placeholder="Requirement">
+                                <button type="button" class="btn btn-secondary" onclick="addRequirement()">
+                                    <i class="fas fa-plus"></i> Add More
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="fees">Annual Fees*</label>
+                        <input type="number" id="fees" class="form-control" min="0" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('courseModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveCourse()">Save Course</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../js/institution/manage-courses.js"></script>
+</body>
+</html>

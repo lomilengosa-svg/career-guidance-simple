@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Track Admissions - Institution Dashboard</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/institution-dashboard.html" class="nav-brand">Career Guidance System</a>
+            <div class="nav-links">
+                <a href="manage-courses.html" class="btn btn-secondary">Courses</a>
+                <a href="review-applications.html" class="btn btn-secondary">Applications</a>
+                <a href="track-admissions.html" class="btn btn-primary">Admissions</a>
+                <a href="student-connections.html" class="btn btn-secondary">Students</a>
+                <button class="btn btn-danger" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        <div class="page-header">
+            <h2>Track Admissions</h2>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="exportAdmissionData()">
+                    <i class="fas fa-download"></i> Export Data
+                </button>
+                <button class="btn btn-primary" onclick="generateReports()">
+                    <i class="fas fa-chart-bar"></i> Generate Reports
+                </button>
+            </div>
+        </div>
+
+        <!-- Analytics Section -->
+        <div class="analytics-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Admission Statistics</h3>
+                </div>
+                <div class="card-body">
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value" id="totalAdmissions">0</div>
+                            <div class="stat-label">Total Admissions</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="acceptanceRate">0%</div>
+                            <div class="stat-label">Acceptance Rate</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="enrollmentRate">0%</div>
+                            <div class="stat-label">Enrollment Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trends Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Admission Trends</h3>
+                    <select id="trendPeriod" class="form-control">
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <canvas id="admissionTrends"></canvas>
+                </div>
+            </div>
+
+            <!-- Course Distribution -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Course Distribution</h3>
+                </div>
+                <div class="card-body">
+                    <canvas id="courseDistribution"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admissions Table -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3>Recent Admissions</h3>
+                <div class="filters">
+                    <input type="text" id="searchAdmission" class="form-control" placeholder="Search...">
+                    <select id="courseFilter" class="form-control">
+                        <option value="">All Courses</option>
+                    </select>
+                    <select id="statusFilter" class="form-control">
+                        <option value="">All Status</option>
+                        <option value="enrolled">Enrolled</option>
+                        <option value="pending">Pending Enrollment</option>
+                        <option value="withdrawn">Withdrawn</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Admission Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admissionsTable">
+                        <!-- Admissions data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enrollment Modal -->
+    <div id="enrollmentModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Enrollment Details</h3>
+                <button class="modal-close" onclick="closeModal('enrollmentModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="enrollmentForm">
+                    <div class="form-group">
+                        <label>Student Name:</label>
+                        <div id="studentName" class="form-control-static"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Course:</label>
+                        <div id="courseName" class="form-control-static"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="enrollmentDate">Enrollment Date:</label>
+                        <input type="date" id="enrollmentDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="enrollmentNotes">Notes:</label>
+                        <textarea id="enrollmentNotes" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="enrollmentStatus">Status:</label>
+                        <select id="enrollmentStatus" class="form-control" required>
+                            <option value="enrolled">Enrolled</option>
+                            <option value="pending">Pending Enrollment</option>
+                            <option value="withdrawn">Withdrawn</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('enrollmentModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveEnrollment()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Modal -->
+    <div id="reportsModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Generate Reports</h3>
+                <button class="modal-close" onclick="closeModal('reportsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="report-options">
+                    <div class="form-group">
+                        <label>Report Type:</label>
+                        <select id="reportType" class="form-control">
+                            <option value="admission_summary">Admission Summary</option>
+                            <option value="course_wise">Course-wise Analysis</option>
+                            <option value="demographic">Demographic Analysis</option>
+                            <option value="trend">Trend Analysis</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Date Range:</label>
+                        <div class="date-range">
+                            <input type="date" id="reportStartDate" class="form-control">
+                            <span>to</span>
+                            <input type="date" id="reportEndDate" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Format:</label>
+                        <select id="reportFormat" class="form-control">
+                            <option value="pdf">PDF</option>
+                            <option value="excel">Excel</option>
+                            <option value="csv">CSV</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('reportsModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="downloadReport()">Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../js/institution/track-admissions.js"></script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Review Applications - Institution Dashboard</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/institution-dashboard.html" class="nav-brand">Career Guidance System</a>
+            <div class="nav-links">
+                <a href="manage-courses.html" class="btn btn-secondary">Courses</a>
+                <a href="review-applications.html" class="btn btn-primary">Applications</a>
+                <a href="track-admissions.html" class="btn btn-secondary">Admissions</a>
+                <a href="student-connections.html" class="btn btn-secondary">Students</a>
+                <button class="btn btn-danger" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        <div class="page-header">
+            <h2>Review Applications</h2>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="exportApplications()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn btn-secondary" onclick="showFilters()">
+                    <i class="fas fa-filter"></i> Filters
+                </button>
+            </div>
+        </div>
+
+        <div class="filters-section" id="filtersSection" style="display: none;">
+            <div class="form-group">
+                <input type="text" id="searchStudent" class="form-control" placeholder="Search by student name or email">
+            </div>
+            <div class="form-group">
+                <select id="courseFilter" class="form-control">
+                    <option value="">All Courses</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <select id="statusFilter" class="form-control">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending Review</option>
+                    <option value="under_review">Under Review</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <input type="date" id="dateFrom" class="form-control">
+                <input type="date" id="dateTo" class="form-control">
+            </div>
+        </div>
+
+        <div class="applications-list" id="applicationsList">
+            <!-- Applications will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Application Review Modal -->
+    <div id="reviewModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Review Application</h3>
+                <button class="modal-close" onclick="closeModal('reviewModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="student-profile">
+                    <div class="profile-header">
+                        <img id="studentPhoto" src="" alt="Student Photo" class="profile-photo">
+                        <div class="profile-info">
+                            <h4 id="studentName"></h4>
+                            <p id="studentEmail"></p>
+                        </div>
+                    </div>
+                    <div class="profile-details">
+                        <div class="detail-item">
+                            <label>Applied Course:</label>
+                            <span id="appliedCourse"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>GPA:</label>
+                            <span id="studentGPA"></span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Application Date:</label>
+                            <span id="applicationDate"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="documents-section">
+                    <h4>Submitted Documents</h4>
+                    <div id="documentsList">
+                        <!-- Documents will be listed here -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="reviewNotes">Review Notes</label>
+                    <textarea id="reviewNotes" class="form-control" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="applicationStatus">Status</label>
+                    <select id="applicationStatus" class="form-control">
+                        <option value="under_review">Under Review</option>
+                        <option value="accepted">Accept</option>
+                        <option value="rejected">Reject</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('reviewModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveReview()">Save Review</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../js/institution/review-applications.js"></script>
+</body>
+</html>

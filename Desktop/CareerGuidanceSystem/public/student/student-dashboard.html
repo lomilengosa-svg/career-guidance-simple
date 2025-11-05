@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard - Career Guidance System</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/student-dashboard.html" class="nav-brand">Career Guidance System</a>
+            <div class="nav-links">
+                <a href="course-explorer.html" class="btn btn-secondary">Explore Courses</a>
+                <a href="my-applications.html" class="btn btn-secondary">My Applications</a>
+                <a href="job-board.html" class="btn btn-secondary">Job Board</a>
+                <a href="career-guidance.html" class="btn btn-secondary">Career Guidance</a>
+                <button class="btn btn-danger" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <div class="student-info">
+                <img id="studentPhoto" src="../img/default-avatar.png" alt="Student Photo" class="profile-photo">
+                <div>
+                    <h2>Welcome, <span id="studentName">Student</span>!</h2>
+                    <p id="studentStatus">Status: Active</p>
+                </div>
+            </div>
+            <div class="quick-actions">
+                <button class="btn btn-primary" onclick="window.location.href='course-explorer.html'">
+                    <i class="fas fa-search"></i> Find Courses
+                </button>
+                <button class="btn btn-primary" onclick="window.location.href='job-board.html'">
+                    <i class="fas fa-briefcase"></i> Find Jobs
+                </button>
+                <button class="btn btn-primary" onclick="window.location.href='career-guidance.html'">
+                    <i class="fas fa-compass"></i> Get Guidance
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="grid grid-3">
+            <!-- Applications Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>My Applications</h3>
+                </div>
+                <div class="card-body">
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value" id="pendingApplications">0</div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="acceptedApplications">0</div>
+                            <div class="stat-label">Accepted</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="totalApplications">0</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="applicationsChart"></canvas>
+                    </div>
+                    <a href="my-applications.html" class="btn btn-secondary mt-3">View All Applications</a>
+                </div>
+            </div>
+
+            <!-- Recommended Courses -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Recommended Courses</h3>
+                </div>
+                <div class="card-body">
+                    <div id="recommendedCourses" class="recommendations-list">
+                        <!-- Recommended courses will be loaded here -->
+                    </div>
+                    <a href="course-explorer.html" class="btn btn-secondary mt-3">Explore More Courses</a>
+                </div>
+            </div>
+
+            <!-- Job Matches -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Job Matches</h3>
+                </div>
+                <div class="card-body">
+                    <div id="jobMatches" class="recommendations-list">
+                        <!-- Job matches will be loaded here -->
+                    </div>
+                    <a href="job-board.html" class="btn btn-secondary mt-3">View All Jobs</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Section -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3>Recent Activity</h3>
+            </div>
+            <div class="card-body">
+                <div class="timeline" id="activityTimeline">
+                    <!-- Timeline items will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Events -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3>Upcoming Events</h3>
+            </div>
+            <div class="card-body">
+                <div class="events-grid" id="upcomingEvents">
+                    <!-- Events will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Update Modal -->
+    <div id="profileModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Update Profile</h3>
+                <button class="modal-close" onclick="closeModal('profileModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label for="name">Full Name:</label>
+                        <input type="text" id="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number:</label>
+                        <input type="tel" id="phone" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="bio">About Me:</label>
+                        <textarea id="bio" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="skills">Skills:</label>
+                        <input type="text" id="skills" class="form-control" placeholder="Enter skills separated by commas">
+                    </div>
+                    <div class="form-group">
+                        <label for="interests">Interests:</label>
+                        <input type="text" id="interests" class="form-control" placeholder="Enter interests separated by commas">
+                    </div>
+                    <div class="form-group">
+                        <label for="profilePhoto">Profile Photo:</label>
+                        <input type="file" id="profilePhoto" class="form-control" accept="image/*">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('profileModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="updateProfile()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Notifications</h3>
+                <button class="modal-close" onclick="closeModal('notificationModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="notifications-list" id="notificationsList">
+                    <!-- Notifications will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container for Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script type="module" src="../js/student/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Institution Dashboard - Career Guidance System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .loading-spinner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .notification {
+            padding: 15px;
+            margin: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .notification-success { background-color: #d4edda; border: 1px solid #c3e6cb; }
+        .notification-warning { background-color: #fff3cd; border: 1px solid #ffeeba; }
+        .notification-error { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+
+        .gpa-indicator {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .gpa-bar {
+            height: 100%;
+            color: white;
+            text-align: center;
+            line-height: 20px;
+            transition: width 0.3s ease;
+        }
+
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .student-photo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-bottom: 20px;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-admitted { background-color: #d4edda; color: #155724; }
+        .status-rejected { background-color: #f8d7da; color: #721c24; }
+
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr !important; }
+            .chart-container { height: 250px; }
+            .action-buttons { display: flex; flex-direction: column; gap: 5px; }
+            .student-info { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/" class="nav-brand">Career Guidance System</a>
+            <div class="nav-links">
+                <a href="#" class="btn btn-secondary" onclick="showCourses()">Manage Courses</a>
+                <a href="#" class="btn btn-secondary" onclick="showApplications()">Applications</a>
+                <a href="#" class="btn btn-secondary" onclick="showProfile()">Institution Profile</a>
+                <button class="btn btn-danger" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div id="notificationsContainer" class="notifications-container"></div>
+
+    <div class="container mt-3">
+        <div class="dashboard-filters mb-3">
+            <div class="filter-group">
+                <label for="dateRange">Time Range:</label>
+                <select id="dateRange" class="form-control" onchange="loadDashboardData({ dateRange: this.value })">
+                    <option value="7days">Last 7 Days</option>
+                    <option value="30days">Last 30 Days</option>
+                    <option value="90days">Last 90 Days</option>
+                    <option value="all">All Time</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="statusFilter">Status:</label>
+                <select id="statusFilter" class="form-control" onchange="loadDashboardData({ status: this.value })">
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="admitted">Admitted</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid grid-3">
+            <!-- Applications Overview -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Applications Overview</h3>
+                </div>
+                <div id="applicationStats">
+                    <div class="stat-item">
+                        <i class="fas fa-file-alt stat-icon"></i>
+                        <div class="stat-info">
+                            <span class="stat-label">Total Applications</span>
+                            <span id="totalApplications" class="stat-value">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-clock stat-icon"></i>
+                        <div class="stat-info">
+                            <span class="stat-label">Pending Review</span>
+                            <span id="pendingApplications" class="stat-value">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-check-circle stat-icon"></i>
+                        <div class="stat-info">
+                            <span class="stat-label">Accepted</span>
+                            <span id="acceptedApplications" class="stat-value">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="applicationsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Course Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Course Statistics</h3>
+                </div>
+                <div id="courseStats">
+                    <p>Total Courses: <span id="totalCourses">0</span></p>
+                    <p>Active Courses: <span id="activeCourses">0</span></p>
+                    <p>Available Seats: <span id="availableSeats">0</span></p>
+                    <button class="btn btn-primary" onclick="addNewCourse()">Add Course</button>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Quick Actions</h3>
+                </div>
+                <div class="grid grid-2">
+                    <button class="btn btn-primary mb-2" onclick="reviewApplications()">Review Applications</button>
+                    <button class="btn btn-primary mb-2" onclick="updateRequirements()">Update Requirements</button>
+                    <button class="btn btn-primary mb-2" onclick="manageAdmissions()">Manage Admissions</button>
+                    <button class="btn btn-primary mb-2" onclick="viewReports()">View Reports</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Applications -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title">Recent Applications</h3>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Course</th>
+                        <th>Applied Date</th>
+                        <th>GPA</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="recentApplications">
+                    <!-- Applications will be populated here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Popular Courses -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title">Popular Courses</h3>
+            </div>
+            <div class="grid grid-3" id="popularCourses">
+                <!-- Popular courses will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add/Edit Course Modal -->
+    <div id="courseModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Course</h3>
+                <button class="modal-close" onclick="closeModal('courseModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="courseForm">
+                    <div class="form-group">
+                        <label for="courseName">Course Name:</label>
+                        <input type="text" id="courseName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="faculty">Faculty:</label>
+                        <select id="faculty" class="form-control" required>
+                            <!-- Faculties will be populated here -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="duration">Duration (Years):</label>
+                        <input type="number" id="duration" class="form-control" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="seats">Available Seats:</label>
+                        <input type="number" id="seats" class="form-control" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="requirements">Requirements:</label>
+                        <div id="requirementsList">
+                            <div class="requirement-item">
+                                <input type="text" class="form-control mb-2" placeholder="Requirement">
+                                <button type="button" class="btn btn-secondary" onclick="addRequirement()">Add More</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('courseModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveCourse()">Save Course</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profileModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Institution Profile</h3>
+                <button class="modal-close" onclick="closeModal('profileModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label for="institutionName">Institution Name:</label>
+                        <input type="text" id="institutionName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">Description:</label>
+                        <textarea id="description" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="website">Website:</label>
+                        <input type="url" id="website" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="contact">Contact Email:</label>
+                        <input type="email" id="contact" class="form-control" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('profileModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="saveProfile()">Save Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth } from './firebase-app.js';
+        import { signOut } from 'https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js';
+        import config from './config.js';
+        import './js/institution-dashboard.js';
+
+        // Initialize the dashboard
+        async function initializeDashboard() {
+            const user = auth.currentUser;
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            await loadApplicationStats();
+            await loadCourseStats();
+            await loadRecentApplications();
+            await loadPopularCourses();
+        }
+
+        // Load application statistics
+        async function loadApplicationStats() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${config.apiUrl}/api/institution/applications/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('totalApplications').textContent = data.data.total;
+                    document.getElementById('pendingApplications').textContent = data.data.pending;
+                    document.getElementById('acceptedApplications').textContent = data.data.accepted;
+                }
+            } catch (error) {
+                console.error('Error loading application stats:', error);
+            }
+        }
+
+        // Load course statistics
+        async function loadCourseStats() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${config.apiUrl}/api/institution/courses/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('totalCourses').textContent = data.data.total;
+                    document.getElementById('activeCourses').textContent = data.data.active;
+                    document.getElementById('availableSeats').textContent = data.data.availableSeats;
+                }
+            } catch (error) {
+                console.error('Error loading course stats:', error);
+            }
+        }
+
+        // Load recent applications
+        async function loadRecentApplications() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${config.apiUrl}/api/institution/applications/recent`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const tbody = document.getElementById('recentApplications');
+                    tbody.innerHTML = data.data.map(app => `
+                        <tr>
+                            <td>${app.studentName}</td>
+                            <td>${app.courseName}</td>
+                            <td>${new Date(app.appliedDate).toLocaleDateString()}</td>
+                            <td>${app.studentGPA}</td>
+                            <td><span class="badge badge-${getStatusBadge(app.status)}">${app.status}</span></td>
+                            <td>
+                                <button class="btn btn-secondary" onclick="reviewApplication('${app.id}')">Review</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading recent applications:', error);
+            }
+        }
+
+        // Load popular courses
+        async function loadPopularCourses() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${config.apiUrl}/api/institution/courses/popular`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const container = document.getElementById('popularCourses');
+                    container.innerHTML = data.data.map(course => `
+                        <div class="card">
+                            <h4>${course.name}</h4>
+                            <p>Applications: ${course.applications}</p>
+                            <p>Available Seats: ${course.availableSeats}</p>
+                            <button class="btn btn-secondary" onclick="viewCourse('${course.id}')">View Details</button>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading popular courses:', error);
+            }
+        }
+
+        // Utility function for status badge colors
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'admitted': return 'success';
+                case 'pending': return 'warning';
+                case 'rejected': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        // Make functions globally available
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+                localStorage.removeItem('token');
+                localStorage.removeItem('role');
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Error signing out:', error);
+                alert('Error signing out');
+            }
+        };
+
+        window.showCourses = function() {
+            window.location.href = 'manage-courses.html';
+        };
+
+        window.showApplications = function() {
+            window.location.href = 'applications.html';
+        };
+
+        window.showProfile = function() {
+            document.getElementById('profileModal').style.display = 'flex';
+        };
+
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        };
+
+        window.addNewCourse = function() {
+            document.getElementById('courseModal').style.display = 'flex';
+        };
+
+        // Initialize dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+</body>
+</html>

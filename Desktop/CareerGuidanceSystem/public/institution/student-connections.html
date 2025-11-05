@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Connections - Institution Dashboard</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/institution-dashboard.html" class="nav-brand">Career Guidance System</a>
+            <div class="nav-links">
+                <a href="manage-courses.html" class="btn btn-secondary">Courses</a>
+                <a href="review-applications.html" class="btn btn-secondary">Applications</a>
+                <a href="track-admissions.html" class="btn btn-secondary">Admissions</a>
+                <a href="student-connections.html" class="btn btn-primary">Students</a>
+                <button class="btn btn-danger" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        <div class="page-header">
+            <h2>Student Connections</h2>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="startBroadcast()">
+                    <i class="fas fa-broadcast-tower"></i> Broadcast Message
+                </button>
+                <button class="btn btn-secondary" onclick="showFilters()">
+                    <i class="fas fa-filter"></i> Filters
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div class="filters-section" id="filtersSection" style="display: none;">
+            <div class="form-group">
+                <input type="text" id="searchStudent" class="form-control" placeholder="Search students...">
+            </div>
+            <div class="form-group">
+                <select id="courseFilter" class="form-control">
+                    <option value="">All Courses</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <select id="yearFilter" class="form-control">
+                    <option value="">All Years</option>
+                    <option value="1">1st Year</option>
+                    <option value="2">2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <select id="statusFilter" class="form-control">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="alumni">Alumni</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Students Grid -->
+        <div class="students-grid" id="studentsGrid">
+            <!-- Students will be loaded here -->
+        </div>
+
+        <!-- Chat/Message Section -->
+        <div class="chat-section" id="chatSection" style="display: none;">
+            <div class="chat-header">
+                <h3>Messages</h3>
+                <button class="btn btn-secondary" onclick="minimizeChat()">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be loaded here -->
+            </div>
+            <div class="chat-input">
+                <textarea id="messageInput" class="form-control" placeholder="Type your message..."></textarea>
+                <button class="btn btn-primary" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Broadcast Modal -->
+    <div id="broadcastModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Broadcast Message</h3>
+                <button class="modal-close" onclick="closeModal('broadcastModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="broadcastForm">
+                    <div class="form-group">
+                        <label>Recipients:</label>
+                        <select id="recipientType" class="form-control" onchange="updateRecipientFilters()">
+                            <option value="all">All Students</option>
+                            <option value="course">By Course</option>
+                            <option value="year">By Year</option>
+                            <option value="custom">Custom Selection</option>
+                        </select>
+                    </div>
+                    <div id="recipientFilters" style="display: none;">
+                        <!-- Dynamic filters will be added here -->
+                    </div>
+                    <div class="form-group">
+                        <label>Message Type:</label>
+                        <select id="messageType" class="form-control">
+                            <option value="announcement">Announcement</option>
+                            <option value="reminder">Reminder</option>
+                            <option value="alert">Alert</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Subject:</label>
+                        <input type="text" id="messageSubject" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Message:</label>
+                        <textarea id="messageContent" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Schedule:</label>
+                        <div class="schedule-options">
+                            <label>
+                                <input type="radio" name="schedule" value="now" checked> Send Now
+                            </label>
+                            <label>
+                                <input type="radio" name="schedule" value="later"> Schedule for Later
+                            </label>
+                        </div>
+                        <div id="scheduleDateTime" style="display: none;">
+                            <input type="datetime-local" id="scheduledTime" class="form-control">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('broadcastModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="sendBroadcast()">Send Broadcast</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Details Modal -->
+    <div id="studentDetailsModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Student Details</h3>
+                <button class="modal-close" onclick="closeModal('studentDetailsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="student-profile">
+                    <div class="profile-header">
+                        <img id="studentPhoto" src="" alt="Student Photo" class="profile-photo">
+                        <div class="profile-info">
+                            <h4 id="studentName"></h4>
+                            <p id="studentEmail"></p>
+                            <span id="studentStatus" class="status-badge"></span>
+                        </div>
+                    </div>
+                    <div class="profile-details">
+                        <!-- Student details will be loaded here -->
+                    </div>
+                    <div class="academic-records">
+                        <h4>Academic Records</h4>
+                        <div id="academicRecords">
+                            <!-- Academic records will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="communication-history">
+                        <h4>Communication History</h4>
+                        <div id="communicationHistory">
+                            <!-- Communication history will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="startChat()">Send Message</button>
+                <button class="btn btn-primary" onclick="viewFullProfile()">View Full Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="../js/institution/student-connections.js"></script>
+</body>
+</html>

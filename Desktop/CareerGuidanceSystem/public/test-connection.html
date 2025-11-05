@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Connection Test</title>
+    <style>
+        .endpoint {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background-color: #dff0d8; color: #3c763d; }
+        .error { background-color: #f2dede; color: #a94442; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    <p>Testing connection to: <span id="apiUrl"></span></p>
+
+    <div class="endpoint">
+        <h2>Health Check</h2>
+        <div id="healthStatus" class="status">Testing...</div>
+        <pre id="healthResponse"></pre>
+    </div>
+
+    <div class="endpoint">
+        <h2>Database Test</h2>
+        <div id="dbStatus" class="status">Testing...</div>
+        <pre id="dbResponse"></pre>
+    </div>
+
+    <script type="module">
+        import config from './config.js';
+
+        document.getElementById('apiUrl').textContent = config.apiUrl;
+
+        async function testEndpoint(endpoint, statusId, responseId) {
+            const statusElement = document.getElementById(statusId);
+            const responseElement = document.getElementById(responseId);
+            
+            try {
+                statusElement.textContent = 'Testing...';
+                const response = await fetch(`${config.apiUrl}${endpoint}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusElement.textContent = '✅ Success';
+                    statusElement.className = 'status success';
+                } else {
+                    throw new Error(data.message || 'Request failed');
+                }
+                
+                responseElement.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                statusElement.textContent = `❌ Error: ${error.message}`;
+                statusElement.className = 'status error';
+                responseElement.textContent = error.stack || error.message;
+            }
+        }
+
+        // Test health endpoint
+        testEndpoint('/health', 'healthStatus', 'healthResponse');
+        
+        // Test database endpoint
+        testEndpoint('/test-db', 'dbStatus', 'dbResponse');
+    </script>
+</body>
+</html>

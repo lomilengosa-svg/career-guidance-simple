@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard - Career Guidance System</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container navbar-content">
+            <a href="/" class="nav-brand">Career Guidance System</a>
+            <div class="nav-links">
+                <a href="#" class="btn btn-secondary" onclick="showApplications()">My Applications</a>
+                <a href="#" class="btn btn-secondary" onclick="showTranscript()">Transcript</a>
+                <a href="#" class="btn btn-secondary" onclick="showJobMatches()">Job Matches</a>
+                <button class="btn btn-danger" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        <div class="grid grid-3">
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Applications Overview</h3>
+                </div>
+                <div id="applicationStats">
+                    <p>Total Applications: <span id="totalApplications">0</span></p>
+                    <p>Pending: <span id="pendingApplications">0</span></p>
+                    <p>Accepted: <span id="acceptedApplications">0</span></p>
+                </div>
+            </div>
+
+            <!-- Academic Profile -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Academic Profile</h3>
+                </div>
+                <div id="academicProfile">
+                    <p>GPA: <span id="studentGPA">Not uploaded</span></p>
+                    <p>Certificates: <span id="certificateCount">0</span></p>
+                    <button class="btn btn-primary" onclick="updateProfile()">Update Profile</button>
+                </div>
+            </div>
+
+            <!-- Job Matches -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Job Matches</h3>
+                </div>
+                <div id="jobMatches">
+                    <p>Matching Jobs: <span id="matchingJobsCount">0</span></p>
+                    <button class="btn btn-primary" onclick="viewJobMatches()">View Matches</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Applications -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h3 class="card-title">Recent Applications</h3>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Institution</th>
+                        <th>Course</th>
+                        <th>Applied Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="recentApplications">
+                    <!-- Applications will be populated here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Application Form Modal -->
+    <div id="applicationModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">New Application</h3>
+                <button class="modal-close" onclick="closeModal('applicationModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="applicationForm">
+                    <div class="form-group">
+                        <label for="institution">Institution:</label>
+                        <select id="institution" class="form-control" required>
+                            <!-- Institutions will be populated here -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="course">Course:</label>
+                        <select id="course" class="form-control" required>
+                            <!-- Courses will be populated here -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="documents">Supporting Documents:</label>
+                        <input type="file" id="documents" class="form-control" multiple>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('applicationModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitApplication()">Submit Application</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transcript Upload Modal -->
+    <div id="transcriptModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Upload Transcript</h3>
+                <button class="modal-close" onclick="closeModal('transcriptModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="transcriptForm">
+                    <div class="form-group">
+                        <label for="gpa">GPA:</label>
+                        <input type="number" id="gpa" class="form-control" step="0.01" min="0" max="4" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="certificates">Certificates:</label>
+                        <input type="file" id="certificates" class="form-control" multiple>
+                    </div>
+                    <div class="form-group">
+                        <label for="experience">Work Experience (Years):</label>
+                        <input type="number" id="experience" class="form-control" min="0" value="0">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('transcriptModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitTranscript()">Upload Transcript</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth } from './firebase-app.js';
+        import { signOut } from 'https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js';
+        import config from './config.js';
+
+        // Initialize the dashboard
+        async function initializeDashboard() {
+            const user = auth.currentUser;
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            await loadApplicationStats();
+            await loadAcademicProfile();
+            await loadRecentApplications();
+            await loadJobMatches();
+        }
+
+        // Load application statistics
+        async function loadApplicationStats() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${config.apiUrl}/api/student/applications`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const apps = data.data;
+                    document.getElementById('totalApplications').textContent = apps.length;
+                    document.getElementById('pendingApplications').textContent = 
+                        apps.filter(app => app.status === 'pending').length;
+                    document.getElementById('acceptedApplications').textContent = 
+                        apps.filter(app => app.status === 'admitted').length;
+                }
+            } catch (error) {
+                console.error('Error loading application stats:', error);
+            }
+        }
+
+        // Load academic profile
+        async function loadAcademicProfile() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${config.apiUrl}/api/student/transcript`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success && data.data) {
+                    document.getElementById('studentGPA').textContent = data.data.gpa;
+                    document.getElementById('certificateCount').textContent = 
+                        data.data.certificates?.length || 0;
+                }
+            } catch (error) {
+                console.error('Error loading academic profile:', error);
+            }
+        }
+
+        // Load recent applications
+        async function loadRecentApplications() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${config.apiUrl}/api/student/applications`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    const tbody = document.getElementById('recentApplications');
+                    tbody.innerHTML = data.data
+                        .sort((a, b) => b.appliedDate - a.appliedDate)
+                        .slice(0, 5)
+                        .map(app => `
+                            <tr>
+                                <td>${app.institutionName}</td>
+                                <td>${app.courseName}</td>
+                                <td>${new Date(app.appliedDate).toLocaleDateString()}</td>
+                                <td><span class="badge badge-${getStatusBadge(app.status)}">${app.status}</span></td>
+                                <td>
+                                    <button class="btn btn-secondary" onclick="viewApplication('${app.id}')">View</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading recent applications:', error);
+            }
+        }
+
+        // Load job matches count
+        async function loadJobMatches() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${config.apiUrl}/api/student/matching-jobs`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    document.getElementById('matchingJobsCount').textContent = data.data.length;
+                }
+            } catch (error) {
+                console.error('Error loading job matches:', error);
+            }
+        }
+
+        // Utility function for status badge colors
+        function getStatusBadge(status) {
+            switch(status) {
+                case 'admitted': return 'success';
+                case 'pending': return 'warning';
+                case 'rejected': return 'danger';
+                default: return 'secondary';
+            }
+        }
+
+        // Make functions globally available
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+                localStorage.removeItem('token');
+                localStorage.removeItem('role');
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Error signing out:', error);
+                alert('Error signing out');
+            }
+        };
+
+        window.showApplications = function() {
+            window.location.href = 'applications.html';
+        };
+
+        window.showTranscript = function() {
+            document.getElementById('transcriptModal').style.display = 'flex';
+        };
+
+        window.showJobMatches = function() {
+            window.location.href = 'job-matches.html';
+        };
+
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        };
+
+        window.submitApplication = async function() {
+            // Implementation for submitting application
+        };
+
+        window.submitTranscript = async function() {
+            // Implementation for submitting transcript
+        };
+
+        window.viewApplication = function(applicationId) {
+            // Implementation for viewing application details
+        };
+
+        // Initialize dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+</body>
+</html>

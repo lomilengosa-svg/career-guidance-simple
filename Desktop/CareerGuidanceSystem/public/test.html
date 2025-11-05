@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Career Guidance System - Test Suite</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 4px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background-color: #dff0d8; color: #3c763d; }
+        .error { background-color: #f2dede; color: #a94442; }
+        button { padding: 10px; margin: 5px; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Career Guidance System - Test Suite</h1>
+    <div id="config-info" class="test-section">
+        <h2>Configuration</h2>
+        <p>Backend URL: <span id="backendUrl"></span></p>
+        <p>Frontend URL: <span id="frontendUrl"></span></p>
+    </div>
+
+    <div class="test-section">
+        <h2>1. Backend Health Check</h2>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <div id="healthResult" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Database Connection</h2>
+        <button onclick="testDatabase()">Test Database Connection</button>
+        <div id="dbResult" class="test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Authentication Tests</h2>
+        <div>
+            <input type="email" id="testEmail" placeholder="Test email">
+            <input type="password" id="testPassword" placeholder="Test password">
+            <button onclick="testRegistration()">Test Registration</button>
+            <button onclick="testLogin()">Test Login</button>
+        </div>
+        <div id="authResult" class="test-result"></div>
+    </div>
+
+    <script type="module">
+        import config from './config.js';
+        
+        // Display configuration
+        document.getElementById('backendUrl').textContent = config.apiUrl;
+        document.getElementById('frontendUrl').textContent = window.location.origin;
+
+        window.testHealth = async () => {
+            const resultDiv = document.getElementById('healthResult');
+            try {
+                const response = await fetch(`${config.apiUrl}/health`);
+                const data = await response.json();
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = `
+                    <p>✅ Health check successful</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `
+                    <p>❌ Health check failed</p>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        };
+
+        window.testDatabase = async () => {
+            const resultDiv = document.getElementById('dbResult');
+            try {
+                const response = await fetch(`${config.apiUrl}/test-db`);
+                const data = await response.json();
+                resultDiv.className = 'test-result success';
+                resultDiv.innerHTML = `
+                    <p>✅ Database connection successful</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `
+                    <p>❌ Database connection failed</p>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        };
+
+        window.testRegistration = async () => {
+            const resultDiv = document.getElementById('authResult');
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+
+            try {
+                const response = await fetch(`${config.apiUrl}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email,
+                        password,
+                        role: 'student'
+                    })
+                });
+                const data = await response.json();
+                resultDiv.className = 'test-result ' + (response.ok ? 'success' : 'error');
+                resultDiv.innerHTML = `
+                    <p>${response.ok ? '✅ Registration successful' : '❌ Registration failed'}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `
+                    <p>❌ Registration failed</p>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        };
+
+        window.testLogin = async () => {
+            const resultDiv = document.getElementById('authResult');
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+
+            try {
+                // First get the Firebase ID token (you'll need to implement this)
+                // Then send it to your backend
+                const response = await fetch(`${config.apiUrl}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idToken: 'FIREBASE_ID_TOKEN' // You'll need to get this from Firebase Auth
+                    })
+                });
+                const data = await response.json();
+                resultDiv.className = 'test-result ' + (response.ok ? 'success' : 'error');
+                resultDiv.innerHTML = `
+                    <p>${response.ok ? '✅ Login successful' : '❌ Login failed'}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.className = 'test-result error';
+                resultDiv.innerHTML = `
+                    <p>❌ Login failed</p>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        };
+
+        // Run health check on page load
+        testHealth();
+    </script>
+</body>
+</html>
